@@ -1,3 +1,5 @@
+var LocalStorage = require('node-localstorage').LocalStorage;
+
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -13,9 +15,9 @@ this file and include it in basic-server.js so that it actually works.
 **************************************************************/
 
 var requestHandler = function(request, response) {
-  // Request and Response come from node's http module.
-  console.log("request: " + request);
 
+  // Request and Response come from node's http module.
+  // console.log(request);
   //
   // They include information about both the incoming request, such as
   // headers and URL, and about the outgoing response, such as its status
@@ -30,12 +32,36 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  // console.log("data: " + request.body);
+  var resultsArray = [];
+  
+  if (request.url !== '/classes/messages') {
+    var statusCode = 404;
+  } else {
 
-  // The outgoing status.
-  if(request.method === 'GET'){
-    var statusCode = 200;
-  } else if(request.method === 'POST') {
-    statusCode = 201;
+    var localStorage = new LocalStorage('./basic-server');
+    // localStorage.clear();
+    // The outgoing status.
+    if (request.method === 'GET') {
+      // console.log("GEEEET", localStorage.length);
+      statusCode = 200;
+      for (var i = 0; i < localStorage.length; i++) {
+        var obj = localStorage.getItem(localStorage.key(i));
+        resultsArray.push(JSON.parse(obj));
+      }
+
+    } else if (request.method === 'POST') {
+      statusCode = 201;
+
+      request.on('data', function(chunk) {
+        // console.log(chunk.toString());
+        localStorage.setItem(0, chunk);
+      });
+
+      // console.log("in LS: " + localStorage.getItem('0'));
+      // console.log("all of LS: ", localStorage);
+    }
+    
   }
 
   // See the note below about CORS headers.
@@ -51,8 +77,9 @@ var requestHandler = function(request, response) {
   // which includes the status and all headers.
   response.writeHead(statusCode, headers);
 
-  // response.write({results: []});
-  var res = {results: []};
+  var res = {results: resultsArray};
+
+  console.log(res);
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
