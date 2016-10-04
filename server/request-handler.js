@@ -52,7 +52,7 @@ var requestHandler = function(request, response) {
   var resultsArray = [];
   var endpoint = request.url.split('?')[0];
   var parameters = request.url.split('?')[1];
-  console.log(parameters);
+  // console.log(parameters);
 
   var headers = defaultCorsHeaders;
   headers['Content-Type'] = 'applications/json';

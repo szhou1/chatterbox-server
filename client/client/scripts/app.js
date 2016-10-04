@@ -43,6 +43,7 @@ var app = {
     $.ajax({
       url: app.server,
       type: 'POST',
+      dataType: 'jsonp',
       data: JSON.stringify(message),
       success: function (data) {
         console.log('send start');
@@ -69,8 +70,9 @@ var app = {
       success: function(data) {
         console.log('fetch start');
         console.log(data);
+        console.log(typeof data);
 
-        // data = JSON.parse(data);
+        data = JSON.parse(data);
 
         // Don't bother if we have nothing to work with
         if (!data.results || !data.results.length) { 
@@ -86,7 +88,7 @@ var app = {
         // Get the last message
         // var mostRecentMessage = data.results[data.results.length - 1];
         var mostRecentMessage = data.results[0];
-        console.log(mostRecentMessage.objectId, app.lastMessageId);
+        // console.log(mostRecentMessage.objectId, app.lastMessageId);
         // Only bother updating the DOM if we have a new message
         if (mostRecentMessage.objectId !== app.lastMessageId) {
           // Update the UI with the fetched rooms

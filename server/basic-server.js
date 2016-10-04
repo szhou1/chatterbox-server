@@ -1,43 +1,72 @@
 /* Import node's http module: */
-var http = require('http');
-var req = require('./request-handler');
+var fs = require('fs');
+var express = require('express');
+var app = express();
 
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header('Content-Type', 'application/json');
+  next();
+});
 
-// Every server needs to listen on a port with a unique number. The
-// standard port for HTTP servers is port 80, but that port is
-// normally already claimed by another server and/or not accessible
-// so we'll use a standard testing port like 3000, other common development
-// ports are 8080 and 1337.
-var port = 3000;
+app.get('/classes/messages/', function(req, response) {
+//  console.log('get request!');
 
-// For now, since you're running this server on your local machine,
-// we'll have it listen on the IP address 127.0.0.1, which is a
-// special address that always refers to localhost.
-var ip = '127.0.0.1';
+  fs.readFile('msgs.json', 'utf8', function(err, data) {
+    if (err) {
+      return console.log(err);
+    }
+    if (data) {
+      var d = JSON.parse(data);
+      var resultsArray = d.data;
+      var order = req.param('order');
+      if (order === '-createdAt') {        
+        resultsArray.sort(function(a, b) {
+          if (a.createdAt < b.createdAt) {
+            return 1;
+          } else if (a.createdAt > b.createdAt) {
+            return -1;
+          } else {
+            return 0;
+          }
+        });
+      }
+    }
 
+    var res = {results: resultsArray};
+    response.json(res);
+  });
+});
 
+app.post('/classes/messages/', function(request, response) {
+  console.log('post request');
+  console.log(request.body);
+  // request.on('data', function(chunk) {
+  //   fs.readFile('msgs.json', 'utf8', function(err, data) {
+  //     var fileData = {};
 
-// We use node's http module to create a server.
-//
-// The function we pass to http.createServer will be used to handle all
-// incoming requests.
-//
-// After creating the server, we will tell it to listen on the given port and IP. */
-// var server = http.createServer(req.requestHandler);
-var server = http.createServer(req.requestHandler);
-console.log('Listening on http://' + ip + ':' + port);
-server.listen(port, ip);
+  //     if (!data) {
+  //       fileData.data = [];
+  //     } else {
+  //       fileData = JSON.parse(data);
+  //     }
+  //     var newData = JSON.parse(chunk);
+  //     newData.objectId = shortid.generate();
+  //     newData.createdAt = new Date();
+  //     fileData.data.push(newData);
+  //     console.log('before writing file');
 
-// To start this server, run:
-//
-//   node basic-server.js
-//
-// on the command line.
-//
-// To connect to the server, load http://127.0.0.1:3000 in your web
-// browser.
-//
-// server.listen() will continue running as long as there is the
-// possibility of serving more requests. To stop your server, hit
-// Ctrl-C on the command line.
+  //     fs.writeFile('msgs.json', JSON.stringify(fileData), 'utf8');
+  //   });
+  //   console.log('after reading and writing');
+  //   var res = {results: resultsArray};
+  //   response.json(res);
 
+  // });
+
+});
+
+app.listen(3000, function() {
+  console.log('listening...');
+});
