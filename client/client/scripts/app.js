@@ -28,12 +28,12 @@ var app = {
 
     // Fetch previous messages
     app.startSpinner();
-    app.fetch(false);
+    app.fetch();
 
     // Poll for new messages
-    // setInterval(function() {
-    //   app.fetch(true);
-    // }, 3000);
+    setInterval(function() {
+      app.fetch(true);
+    }, 3000);
   },
 
   send: function(message) {
@@ -70,8 +70,10 @@ var app = {
         console.log('fetch start');
         console.log(data);
         // console.log(typeof data);
+        // console.log(typeof data);
+
         data = JSON.parse(data);
-        console.log(typeof data);
+
         // Don't bother if we have nothing to work with
         if (!data.results || !data.results.length) { return; }
 

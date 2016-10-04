@@ -1,5 +1,6 @@
-var LocalStorage = require('node-localstorage').LocalStorage;
-
+var _ = require('underscore');
+var fs = require('fs');
+var shortid = require('shortid');
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -34,67 +35,98 @@ var requestHandler = function(request, response) {
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
   // console.log("data: " + request.body);
   var resultsArray = [];
-  console.log(request.url);
+  // console.log(request.url);
   var endpoint = request.url.split('?')[0];
   var parameters = request.url.split('?')[1];
-  console.log(endpoint, parameters);
+  // console.log(endpoint, parameters);
   if (endpoint !== '/classes/messages' && endpoint !== '/classes/messages/') {
     var statusCode = 404;
   } else {
 
-    var localStorage = new LocalStorage('./basic-server');
-    // localStorage.clear();
     // The outgoing status.
     if (request.method === 'GET') {
-      // console.log("GEEEET", localStorage.length);
       statusCode = 200;
-      for (var i = 0; i < localStorage.length; i++) {
-        var obj = localStorage.getItem(localStorage.key(i));
-        resultsArray.push(JSON.parse(obj));
-      }
+      fs.readFile('msgs.json', 'utf8', function(err, data) {
+        if (err) {
+          return console.log(err);
+        }
+        if (data) {
+          var d = JSON.parse(data);
+          resultsArray = d.data;
+        }
+    
+        var headers = defaultCorsHeaders;
+        headers['Content-Type'] = 'text/plain';
+        response.writeHead(statusCode, headers);
+        var res = {results: resultsArray};
+        response.end(JSON.stringify(res));
+      });
 
     } else if (request.method === 'POST') {
       statusCode = 201;
 
       request.on('data', function(chunk) {
-        // console.log(chunk.toString());
-        localStorage.setItem(localStorage.length, chunk);
+        fs.readFile('msgs.json', 'utf8', function(err, data) {
+          var fileData = {};
+
+          if (!data) {
+            fileData.data = [];
+          } else {
+            fileData = JSON.parse(data);
+          }
+          var newData = JSON.parse(chunk);
+          newData.objectId = shortid.generate();
+          fileData.data.push(newData);
+          fs.writeFile('msgs.json', JSON.stringify(fileData), 'utf8');
+        });
+
+
+        // item.objectId = _.uniqueId('msg');
+        var headers = defaultCorsHeaders;
+        headers['Content-Type'] = 'text/plain';
+        response.writeHead(statusCode, headers);
+        var res = {results: resultsArray};
+        response.end(JSON.stringify(res));
+
       });
 
-      // console.log("in LS: " + localStorage.getItem('0'));
-      // console.log("all of LS: ", localStorage);
     } else if (request.method === 'OPTIONS') {
       statusCode = 200;
+      var headers = defaultCorsHeaders;
+      headers['Content-Type'] = 'text/plain';
+      response.writeHead(statusCode, headers);
+      var res = {results: resultsArray};
+      response.end(JSON.stringify(res));
     }
     
   }
 
   // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
+  // var headers = defaultCorsHeaders;
 
-  // Tell the client we are sending them plain text.
-  //
-  // You will need to change this if you are sending something
-  // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
+  // // Tell the client we are sending them plain text.
+  // //
+  // // You will need to change this if you are sending something
+  // // other than plain text, like JSON or HTML.
+  // headers['Content-Type'] = 'text/plain';
 
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+  // // .writeHead() writes to the request line and headers of the response,
+  // // which includes the status and all headers.
+  // response.writeHead(statusCode, headers);
 
-  var res = {results: resultsArray};
+  // var res = {results: resultsArray};
 
-  console.log(res);
+  // console.log('res', res);
 
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
+  // // Make sure to always call response.end() - Node may not send
+  // // anything back to the client until you do. The string you pass to
+  // // response.end() will be the body of the response - i.e. what shows
+  // // up in the browser.
+  // //
+  // // Calling .end "flushes" the response's internal buffer, forcing
+  // // node to actually send all the data over to the client.
+  // // response.end(JSON.stringify(res));
   // response.end(JSON.stringify(res));
-  response.end(JSON.stringify(res));
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).

@@ -29,5 +29,9 @@
     "presets": [
       "es2015"
     ]
+  },
+  "dependencies": {
+    "shortid": "^2.2.6",
+    "underscore": "^1.8.3"
   }
 }
