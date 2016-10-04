@@ -34,8 +34,11 @@ var requestHandler = function(request, response) {
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
   // console.log("data: " + request.body);
   var resultsArray = [];
-  
-  if (request.url !== '/classes/messages') {
+  console.log(request.url);
+  var endpoint = request.url.split('?')[0];
+  var parameters = request.url.split('?')[1];
+  console.log(endpoint, parameters);
+  if (endpoint !== '/classes/messages' && endpoint !== '/classes/messages/') {
     var statusCode = 404;
   } else {
 
@@ -55,11 +58,13 @@ var requestHandler = function(request, response) {
 
       request.on('data', function(chunk) {
         // console.log(chunk.toString());
-        localStorage.setItem(0, chunk);
+        localStorage.setItem(localStorage.length, chunk);
       });
 
       // console.log("in LS: " + localStorage.getItem('0'));
       // console.log("all of LS: ", localStorage);
+    } else if (request.method === 'OPTIONS') {
+      statusCode = 200;
     }
     
   }
@@ -88,6 +93,7 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
+  // response.end(JSON.stringify(res));
   response.end(JSON.stringify(res));
 };
 
