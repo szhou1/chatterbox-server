@@ -1,14 +1,18 @@
 /* Import node's http module: */
 var fs = require('fs');
 var express = require('express');
+var bodyParser = require('body-parser');
+var shortid = require('shortid');
 var app = express();
 
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   res.header('Content-Type', 'application/json');
   next();
 });
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
 
 app.get('/classes/messages/', function(req, response) {
 //  console.log('get request!');
@@ -20,8 +24,8 @@ app.get('/classes/messages/', function(req, response) {
     if (data) {
       var d = JSON.parse(data);
       var resultsArray = d.data;
-      var order = req.param('order');
-      if (order === '-createdAt') {        
+      // var order = req.query.order;
+      if (req.query.order === '-createdAt') {        
         resultsArray.sort(function(a, b) {
           if (a.createdAt < b.createdAt) {
             return 1;
@@ -42,29 +46,27 @@ app.get('/classes/messages/', function(req, response) {
 app.post('/classes/messages/', function(request, response) {
   console.log('post request');
   console.log(request.body);
-  // request.on('data', function(chunk) {
-  //   fs.readFile('msgs.json', 'utf8', function(err, data) {
-  //     var fileData = {};
+  // console.log(request.body.username);
+  var obj = request.body;
+  var newData = obj;
+  fs.readFile('msgs.json', 'utf8', function(err, data) {
+    var fileData = {};
 
-  //     if (!data) {
-  //       fileData.data = [];
-  //     } else {
-  //       fileData = JSON.parse(data);
-  //     }
-  //     var newData = JSON.parse(chunk);
-  //     newData.objectId = shortid.generate();
-  //     newData.createdAt = new Date();
-  //     fileData.data.push(newData);
-  //     console.log('before writing file');
+    if (!data) {
+      fileData.data = [];
+    } else {
+      fileData = JSON.parse(data);
+    }
+    newData.objectId = shortid.generate();
+    newData.createdAt = new Date();
+    fileData.data.push(newData);
+    // console.log('before writing file', newData);
 
-  //     fs.writeFile('msgs.json', JSON.stringify(fileData), 'utf8');
-  //   });
-  //   console.log('after reading and writing');
-  //   var res = {results: resultsArray};
-  //   response.json(res);
-
-  // });
-
+    fs.writeFile('msgs.json', JSON.stringify(fileData), 'utf8');
+    // console.log('after reading and writing');
+    var res = {results: newData};
+    response.json(res);
+  });
 });
 
 app.listen(3000, function() {

@@ -38,15 +38,18 @@ var app = {
 
   send: function(message) {
     app.startSpinner();
+    console.log('sending: ', message);
 
     // POST the message to the server
     $.ajax({
       url: app.server,
       type: 'POST',
-      dataType: 'jsonp',
-      data: JSON.stringify(message),
+      // dataType: 'jsonp',
+      // data: JSON.stringify(message),
+      data: message,
       success: function (data) {
-        console.log('send start');
+        console.log('send complete');
+        console.log(data.results);
 
         // Clear messages input
         app.$message.val('');
@@ -72,11 +75,10 @@ var app = {
         console.log(data);
         console.log(typeof data);
 
-        data = JSON.parse(data);
+        // data = JSON.parse(data);
 
         // Don't bother if we have nothing to work with
         if (!data.results || !data.results.length) { 
-          console.log("returning");
           app.renderRoomList(null);
           app.renderMessages(null, animate);
           return; 
