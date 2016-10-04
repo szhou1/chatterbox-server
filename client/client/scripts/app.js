@@ -51,7 +51,7 @@ var app = {
         app.$message.val('');
 
         // Trigger a fetch to update the messages, pass true to animate
-        app.fetch(false);
+        app.fetch(true);
         console.log('send complete');
       },
       error: function (error) {
@@ -69,20 +69,24 @@ var app = {
       success: function(data) {
         console.log('fetch start');
         console.log(data);
-        // console.log(typeof data);
-        // console.log(typeof data);
 
-        data = JSON.parse(data);
+        // data = JSON.parse(data);
 
         // Don't bother if we have nothing to work with
-        if (!data.results || !data.results.length) { return; }
+        if (!data.results || !data.results.length) { 
+          console.log("returning");
+          app.renderRoomList(null);
+          app.renderMessages(null, animate);
+          return; 
+        }
 
         // Store messages for caching later
         app.messages = data.results;
 
         // Get the last message
-        var mostRecentMessage = data.results[data.results.length - 1];
-
+        // var mostRecentMessage = data.results[data.results.length - 1];
+        var mostRecentMessage = data.results[0];
+        console.log(mostRecentMessage.objectId, app.lastMessageId);
         // Only bother updating the DOM if we have a new message
         if (mostRecentMessage.objectId !== app.lastMessageId) {
           // Update the UI with the fetched rooms

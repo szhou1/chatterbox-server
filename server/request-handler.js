@@ -1,6 +1,22 @@
 var _ = require('underscore');
 var fs = require('fs');
 var shortid = require('shortid');
+
+// These headers will allow Cross-Origin Resource Sharing (CORS).
+// This code allows this server to talk to websites that
+// are on different domains, for instance, your chat client.
+//
+// Your chat client is running from a url like file://your/chat/client/index.html,
+// which is considered a different domain.
+//
+// Another way to get around this restriction is to serve you chat
+// client from this domain by setting up static file serving.
+var defaultCorsHeaders = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'access-control-allow-headers': 'content-type, accept',
+  'access-control-max-age': 10 // Seconds.
+};
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -33,17 +49,18 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
-  // console.log("data: " + request.body);
   var resultsArray = [];
-  // console.log(request.url);
   var endpoint = request.url.split('?')[0];
   var parameters = request.url.split('?')[1];
-  // console.log(endpoint, parameters);
+  console.log(parameters);
+
+  var headers = defaultCorsHeaders;
+  headers['Content-Type'] = 'applications/json';
+
   if (endpoint !== '/classes/messages' && endpoint !== '/classes/messages/') {
     var statusCode = 404;
   } else {
 
-    // The outgoing status.
     if (request.method === 'GET') {
       statusCode = 200;
       fs.readFile('msgs.json', 'utf8', function(err, data) {
@@ -53,10 +70,21 @@ var requestHandler = function(request, response) {
         if (data) {
           var d = JSON.parse(data);
           resultsArray = d.data;
+          if (parameters && parameters.split('=').length > 1 
+            && parameters.split('=')[1] === '-createdAt') {
+            // console.log('hasidfahskdfjas')
+            resultsArray.sort(function(a, b) {
+              if (a.createdAt < b.createdAt) {
+                return 1;
+              } else if (a.createdAt > b.createdAt) {
+                return -1;
+              } else {
+                return 0;
+              }
+            });
+          }
         }
     
-        var headers = defaultCorsHeaders;
-        headers['Content-Type'] = 'text/plain';
         response.writeHead(statusCode, headers);
         var res = {results: resultsArray};
         response.end(JSON.stringify(res));
@@ -76,14 +104,11 @@ var requestHandler = function(request, response) {
           }
           var newData = JSON.parse(chunk);
           newData.objectId = shortid.generate();
+          newData.createdAt = new Date();
           fileData.data.push(newData);
           fs.writeFile('msgs.json', JSON.stringify(fileData), 'utf8');
         });
 
-
-        // item.objectId = _.uniqueId('msg');
-        var headers = defaultCorsHeaders;
-        headers['Content-Type'] = 'text/plain';
         response.writeHead(statusCode, headers);
         var res = {results: resultsArray};
         response.end(JSON.stringify(res));
@@ -92,8 +117,6 @@ var requestHandler = function(request, response) {
 
     } else if (request.method === 'OPTIONS') {
       statusCode = 200;
-      var headers = defaultCorsHeaders;
-      headers['Content-Type'] = 'text/plain';
       response.writeHead(statusCode, headers);
       var res = {results: resultsArray};
       response.end(JSON.stringify(res));
@@ -129,20 +152,6 @@ var requestHandler = function(request, response) {
   // response.end(JSON.stringify(res));
 };
 
-// These headers will allow Cross-Origin Resource Sharing (CORS).
-// This code allows this server to talk to websites that
-// are on different domains, for instance, your chat client.
-//
-// Your chat client is running from a url like file://your/chat/client/index.html,
-// which is considered a different domain.
-//
-// Another way to get around this restriction is to serve you chat
-// client from this domain by setting up static file serving.
-var defaultCorsHeaders = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'access-control-allow-headers': 'content-type, accept',
-  'access-control-max-age': 10 // Seconds.
-};
+
 
 exports.requestHandler = requestHandler;
