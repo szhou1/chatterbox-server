@@ -48,7 +48,7 @@ var app = {
       // data: JSON.stringify(message),
       data: message,
       success: function (data) {
-        console.log('send complete');
+        console.log('send start');
         console.log(data.results);
 
         // Clear messages input
